@@ -3,7 +3,8 @@ assert = require 'assert'
 class MustDoManager
   constructor: (full_task_list = {}) ->
     @full_task_list = full_task_list
-    @date = '20150101'  # fake, please fix
+    @current_date = @init_today
+    @last_date_check_epoch_seconds = 0
 
   task_list: (maybeDate) ->
     date = maybeDate || @date
@@ -18,7 +19,7 @@ class MustDoManager
 
   complete_task: (ordinal, maybeNote, maybeDate) ->
     tasksToComplete = @task_list(maybeDate).filter (t) ->
-      t.ordinal == ordinal
+      t.ordinal is ordinal
 
     assert.ok tasksToComplete.length <= 1,
       'INTERNAL ERROR: too many tasks with ordinal'
@@ -27,6 +28,31 @@ class MustDoManager
 
     taskToComplete = tasksToComplete[0]
     taskToComplete.completed = true
+    taskToComplete.completion_note = maybeNote
+
     return taskToComplete.ordinal
+
+  remove_task: (ordinal, maybeDate) ->
+    for i in [0..@task_list(maybeDate).length]
+      task = @task_list(maybeDate)[i]
+      if task.ordinal is ordinal
+        @task_list(maybeDate).splice i, 1
+        return task.ordinal
+
+    return 0
+
+  date: ->
+    if @last_date_check_epoch_seconds + 10 < @epoch_seconds()
+      @current_date = @init_today()
+      @last_date_check_epoch_seconds = @epoch_seconds()
+    return @current_date
+
+  epoch_seconds: ->
+    now = new Date
+    return now.getTime() / 1000
+
+  init_today: ->
+    now = new Date
+    return now.toISOString().replace /T.*/, ''
 
 module.exports = MustDoManager

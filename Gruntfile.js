@@ -35,7 +35,7 @@ module.exports = function (grunt) {
   // load all grunt tasks
   require('matchdep').filterDev(['grunt-*', '!grunt-cli']).forEach(grunt.loadNpmTasks);
 
-  grunt.registerTask('test', ['mochaTest', 'coffeelint']);
+  grunt.registerTask('test', ['coffeelint', 'mochaTest']);
   grunt.registerTask('test:watch', ['watch']);
   grunt.registerTask('default', ['test']);
 };
