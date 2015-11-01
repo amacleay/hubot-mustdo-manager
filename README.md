@@ -2,6 +2,9 @@
 
 A hubot script for keeping a day-by-day todo list
 
+[![Build Status](https://travis-ci.org/amacleay/hubot-mustdo-manager.svg?branch=master)](https://travis-ci.org/amacleay/hubot-mustdo-manager)
+
+
 See [`src/mustdo-manager.coffee`](src/mustdo-manager.coffee) for full documentation.
 
 ## Installation
