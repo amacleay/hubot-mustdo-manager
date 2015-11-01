@@ -12,6 +12,14 @@ module.exports = function (grunt) {
         src: ['test/**/*.coffee']
       }
     },
+    coffeelint: {
+      app: ['src/**/*.coffee'],
+      test: {
+        files: {
+          src: ['test/**/*.coffee']
+        }
+      }
+    },
     release: {
       options: {
         tagName: 'v<%= version %>',
@@ -27,7 +35,7 @@ module.exports = function (grunt) {
   // load all grunt tasks
   require('matchdep').filterDev(['grunt-*', '!grunt-cli']).forEach(grunt.loadNpmTasks);
 
-  grunt.registerTask('test', ['mochaTest']);
+  grunt.registerTask('test', ['mochaTest', 'coffeelint']);
   grunt.registerTask('test:watch', ['watch']);
   grunt.registerTask('default', ['test']);
 };

@@ -20,7 +20,9 @@ describe 'mustdo-manager', ->
       'task list for today is empty list'
 
   it 'can be initialized with a task list', ->
-    @manager = new MustDoManager { 20151010: [ {description: 'walk the house'} ] }
+    @manager = new MustDoManager(
+      { 20151010: [ {description: 'walk the house'} ] }
+    )
     assert.deepStrictEqual @manager.full_task_list,
       { 20151010: [ {description: 'walk the house'} ] }
 
