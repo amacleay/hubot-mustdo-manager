@@ -5,6 +5,7 @@ chai.use require 'sinon-chai'
 expect = chai.expect
 
 assert = require 'assert'
+_ = require 'underscore'
 
 describe 'mustdo-hubot-client', ->
   beforeEach ->
@@ -17,6 +18,12 @@ describe 'mustdo-hubot-client', ->
     assert.strictEqual @client.mustdomanager.constructor.name,
       'MustDoManager',
       'Class is MustDoManager'
+
+  it 'has an action, usage, and interpretation for each action', ->
+    assert.deepEqual _.keys(@client.actionDispatch),
+      _.keys(@client.usageDispatch)
+    assert.deepEqual _.keys(@client.actionDispatch),
+      _.keys(@client.responseDispatch)
 
   it 'processes well formed adds into the correct arguments', ->
     assertTaskAction @client, test for test in [
