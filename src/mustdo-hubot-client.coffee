@@ -117,7 +117,12 @@ class MustDoHubotClient
     name for name, usage of usageDispatch
 
   process_command: (command) ->
-    command
+    [managerMethod, managerArgs...] =
+      @task_manager_action command
+    managerResponse =
+      @response_from_command(managerMethod, managerArgs)
+
+    @response_interpretation(managerMethod, managerResponse)
 
   task_manager_action: (command) ->
     matches = command.match @commandRegex
@@ -135,6 +140,18 @@ class MustDoHubotClient
         ['help', usageDispatch.help()]
     else
       ['help', usageDispatch.help()]
+
+  response_from_command: (managerMethod, managerArgs) ->
+    if managerMethod is 'help'
+      managerArgs
+    else
+      if managerArgs.length > 0
+        @mustdomanager[managerMethod].call @mustdomanager, managerArgs
+      else
+        @mustdomanager[managerMethod].call @mustdomanager
+
+  response_interpretation: (managerMethod, managerResponse) ->
+    return [managerMethod].concat(managerResponse)
 
 translate_date = (date) ->
   if date
