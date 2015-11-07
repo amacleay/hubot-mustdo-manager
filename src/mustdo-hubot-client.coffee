@@ -19,51 +19,94 @@ _ = require 'underscore'
 _s = require 'underscore.string'
 exec = require('child_process').execSync
 
+actionDispatch = {
+  add: (description, maybeDate) ->
+
+    if description and description.match /\w/
+      if maybeDate
+        ['add_task', {description: description}, maybeDate]
+      else
+        ['add_task', {description: description}]
+    else
+      throw new Error 'Task add description missing or malformed'
+  list: (junk, maybeDate) ->
+    if junk
+      throw new Error 'Extra parameters'
+    if maybeDate then ['task_list', maybeDate] else ['task_list']
+  complete: null
+  remove: null
+  help: () ->
+    actionText = (
+      name for name, action of actionDispatch when name isnt 'help'
+    ).join ', '
+
+    """
+    MustDoManager
+    Usage: <maybe date> <command> <optional args>
+    Give me a command like #{actionText}
+    """
+}
+responseDispatch = {
+  add: null
+  list: null
+  complete: null
+  remove: null
+  help: null
+}
+usageDispatch = {
+  add: (error) -> """
+    #{error.message}
+    Usage: <maybe date> add <task description>
+    """
+  list: (error) -> """
+    #{error.message}
+    Usage: <maybe date> list
+    """
+  complete: null
+  remove: null
+  help: () ->
+    actionDispatch.help()
+}
+
 class MustDoHubotClient
   constructor: () ->
     @mustdomanager = new MustDoManager
-    @actionDispatch = {
-      add: (description, maybeDate) ->
-
-        if description and description.match /\w/
-          if maybeDate
-            ['add_task', {description: description}, maybeDate]
-          else
-            ['add_task', {description: description}]
-        else
-          throw new Error 'Task add description missing or malformed'
-    }
-    @usageDispatch = {
-      add: (error) -> """
-        #{error.message}
-        Usage: <maybe date> add <task description>
-        """
-    }
-    @responseDispatch = {
-      add: (maybe_ordinal) ->
-        'Not yet implemented'
-    }
     @commandRegex = /// ^
       (.*?)                                   # maybe date
       \s*                                     # consume whitespace
-      (#{ _.keys(@actionDispatch).join '|' }) # action
+      \b
+      (#{ @available_actions().join '|' })    # action
+      \b
       \s*                                     # consume whitespace
       (.*)                                    # subcommand
       $
       ///
 
+  available_actions: () ->
+    name for name, action of actionDispatch
+  available_responses: () ->
+    name for name, response of responseDispatch
+  available_usages: () ->
+    name for name, usage of usageDispatch
 
   process_command: (command) ->
     command
 
   task_manager_action: (command) ->
-    [all, maybeDate, action, subcommand] = command.match @commandRegex
+    matches = command.match @commandRegex
 
-    if @actionDispatch[action]
-      try
-        @actionDispatch[action] subcommand, translate_date maybeDate
-      catch e
-        ['help', @usageDispatch[action] e]
+    if matches
+      [all, maybeDate, action, subcommand] = matches
+
+      if actionDispatch[action]
+        try
+          actionDispatch[action] subcommand, translate_date maybeDate
+        catch e
+          ['help', usageDispatch[action] e]
+      else
+        ['help', usageDispatch.help()]
+    else
+      ['help', usageDispatch.help()]
 
 translate_date = (date) ->
   if date
