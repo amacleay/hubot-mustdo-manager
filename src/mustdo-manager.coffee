@@ -7,7 +7,7 @@ class MustDoManager
     @last_date_check_epoch_seconds = 0
 
   task_list: (maybeDate) ->
-    date = maybeDate || @date
+    date = maybeDate || @date()
     @full_task_list[date] ||= []
 
     return @full_task_list[date]

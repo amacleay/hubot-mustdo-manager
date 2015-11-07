@@ -145,10 +145,7 @@ class MustDoHubotClient
     if managerMethod is 'help'
       managerArgs
     else
-      if managerArgs.length > 0
-        @mustdomanager[managerMethod].call @mustdomanager, managerArgs
-      else
-        @mustdomanager[managerMethod].call @mustdomanager
+      @mustdomanager[managerMethod].apply @mustdomanager, managerArgs
 
   response_interpretation: (managerMethod, managerResponse) ->
     return [managerMethod].concat(managerResponse)
