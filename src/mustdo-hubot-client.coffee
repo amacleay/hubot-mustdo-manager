@@ -33,8 +33,29 @@ actionDispatch = {
     if junk
       throw new Error 'Extra parameters'
     if maybeDate then ['task_list', maybeDate] else ['task_list']
-  complete: null
-  remove: null
+  complete: (subcommand, maybeDate) ->
+    subcommandParse = subcommand.match /^(\d+)\s*(.*)$/
+    if subcommandParse
+      ordinal = subcommandParse[1]
+      maybeNote = _s.trim subcommandParse[2]
+      action = ['complete_task', ordinal, maybeNote]
+      if maybeDate
+        return action.concat(maybeDate)
+      else
+        return action
+    else
+      throw new Error 'Ordinal not found where expected'
+  remove: (subcommand, maybeDate) ->
+    unless subcommand.match /\d+/
+      throw new Error "Ordinal not found where expected"
+    if subcommand.match /\D+/
+      throw new Error "Extra arguments found"
+
+    if maybeDate
+      ['remove_task', subcommand, maybeDate]
+    else
+      ['remove_task', subcommand]
+
   help: () ->
     actionText = (
       name for name, action of actionDispatch when name isnt 'help'
@@ -62,8 +83,14 @@ usageDispatch = {
     #{error.message}
     Usage: <maybe date> list
     """
-  complete: null
-  remove: null
+  complete: (error) -> """
+    #{error.message}
+    Usage: <maybe date> complete <ordinal> <maybe note>
+    """
+  remove: (error) -> """
+    #{error.message}
+    Usage: <maybe date> remove <ordinal>
+    """
   help: () ->
     actionDispatch.help()
 }
@@ -97,6 +124,7 @@ class MustDoHubotClient
 
     if matches
       [all, maybeDate, action, subcommand] = matches
+      subcommand = _s.trim subcommand if subcommand?
 
       if actionDispatch[action]
         try

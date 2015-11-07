@@ -120,6 +120,80 @@ describe 'mustdo-hubot-client', ->
       ],
     ]
 
+  it 'processes well formed completions into the correct arguments', ->
+    assertTaskAction @client, test for test in [
+      ['complete 1',
+        'complete_task',
+        1,
+        ''
+      ],
+      ['complete 5 with gusto',
+        'complete_task',
+        5,
+        'with gusto'
+      ],
+      ['today complete 3 we have finished this one',
+        'complete_task',
+        3,
+        'we have finished this one'
+        relativeDate 0
+      ]
+    ]
+  it 'responds to broken completions with usage', ->
+    assertTaskAction @client, test for test in [
+      ['complete me',
+        'help',
+        "Ordinal not found where expected\n" +
+          "Usage: <maybe date> complete <ordinal> <maybe note>"
+      ],
+      ['complete with gusto 5',
+        'help',
+        "Ordinal not found where expected\n" +
+          "Usage: <maybe date> complete <ordinal> <maybe note>"
+      ],
+      ['today complete with gusto 5',
+        'help',
+        "Ordinal not found where expected\n" +
+          "Usage: <maybe date> complete <ordinal> <maybe note>"
+      ],
+    ]
+
+  it 'processes well formed removals into the correct arguments', ->
+    assertTaskAction @client, test for test in [
+      ['today remove 3',
+        'remove_task',
+        3,
+        relativeDate 0
+      ],
+      ['remove 1',
+        'remove_task',
+        1,
+      ],
+    ]
+  it 'responds to broken removals with usage', ->
+    assertTaskAction @client, test for test in [
+      ['remove',
+        'help',
+        "Ordinal not found where expected\n" +
+          "Usage: <maybe date> remove <ordinal>"
+      ],
+      ['remove it',
+        'help',
+        "Ordinal not found where expected\n" +
+          "Usage: <maybe date> remove <ordinal>"
+      ],
+      ['remove 1 cause it is fun',
+        'help',
+        "Extra arguments found\n" +
+          "Usage: <maybe date> remove <ordinal>"
+      ],
+      ['monday remove 1 cause it is fun',
+        'help',
+        "Extra arguments found\n" +
+          "Usage: <maybe date> remove <ordinal>"
+      ],
+    ]
+
 assertTaskAction = (client, test) ->
   [command, expectMethod, expectArgs...] = test
   [managerMethod, managerArgs...] =
