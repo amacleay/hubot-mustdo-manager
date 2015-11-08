@@ -218,4 +218,8 @@ relativeDate = (offsetDays) ->
     60 * # seconds in minute
     1000 # ms in second
   target = new Date target_ms
-  target.toISOString().replace /T.*/, ''
+  zpad = (num) -> if num < 10 then '0' + num else num
+
+  "#{ target.getFullYear() }-" +
+    "#{ zpad( target.getMonth() + 1 ) }-" +
+    zpad(target.getDate())

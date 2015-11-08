@@ -53,6 +53,10 @@ class MustDoManager
 
   init_today: ->
     now = new Date
-    return now.toISOString().replace /T.*/, ''
+    zpad = (num) -> if num < 10 then '0' + num else num
+
+    "#{ now.getFullYear() }-" +
+      "#{ zpad( now.getMonth() + 1 ) }-" +
+      zpad(now.getDate())
 
 module.exports = MustDoManager
