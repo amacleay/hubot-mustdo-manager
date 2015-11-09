@@ -36,7 +36,7 @@ actionDispatch = {
   complete: (subcommand, maybeDate) ->
     subcommandParse = subcommand.match /^(\d+)\s*(.*)$/
     if subcommandParse
-      ordinal = subcommandParse[1]
+      ordinal = parseInt subcommandParse[1], 10
       maybeNote = _s.trim subcommandParse[2]
       action = ['complete_task', ordinal, maybeNote]
       if maybeDate
@@ -51,10 +51,11 @@ actionDispatch = {
     if subcommand.match /\D+/
       throw new Error "Extra arguments found"
 
+    ordinal = parseInt subcommand, 10
     if maybeDate
-      ['remove_task', subcommand, maybeDate]
+      ['remove_task', ordinal, maybeDate]
     else
-      ['remove_task', subcommand]
+      ['remove_task', ordinal]
 
   help: () ->
     actionText = (
@@ -67,12 +68,31 @@ actionDispatch = {
     Give me a command like #{actionText}
     """
 }
+genericResponder = (action) ->
+  (maybeOrdinal) ->
+    if "#{maybeOrdinal}".match /^\d+$/
+      if parseInt(maybeOrdinal, 10) > 0
+        return "Task #{action} succeeded: task ##{maybeOrdinal}"
+      else
+        return "Task #{action} failed with code #{maybeOrdinal}"
+    else
+      return "Failed to parse output"
+
+taskSummary = (task) ->
+  prefix = suffix = ''
+  if task.completed
+    prefix = 'COMPLETE '
+    if task.completion_note
+      suffix = " (#{task.completion_note})"
+  "#{task.ordinal}) #{prefix}'#{task.description}'#{suffix}"
+
 responseDispatch = {
-  add: null
-  list: null
-  complete: null
-  remove: null
-  help: null
+  add_task: genericResponder 'add'
+  complete_task: genericResponder 'complete'
+  remove_task: genericResponder 'remove'
+  task_list: (tasks) ->
+    (taskSummary task for task in tasks).join "\n"
+  help: (helpText) -> helpText[0]
 }
 usageDispatch = {
   add: (error) -> """
@@ -148,7 +168,10 @@ class MustDoHubotClient
       @mustdomanager[managerMethod].apply @mustdomanager, managerArgs
 
   response_interpretation: (managerMethod, managerResponse) ->
-    return [managerMethod].concat(managerResponse)
+    if responseDispatch[managerMethod]
+      responseDispatch[managerMethod].call @mustdomanager, managerResponse
+    else
+      throw new Error 'I did not understand the command'
 
 translate_date = (date) ->
   if date

@@ -22,8 +22,6 @@ describe 'mustdo-hubot-client', ->
   it 'has an action, usage, and interpretation for each action', ->
     assert.deepEqual @client.available_actions(),
       @client.available_usages()
-    assert.deepEqual @client.available_actions(),
-      @client.available_responses()
 
   it 'processes well formed adds into the correct arguments', ->
     assertTaskAction @client, test for test in [
@@ -193,6 +191,30 @@ describe 'mustdo-hubot-client', ->
           "Usage: <maybe date> remove <ordinal>"
       ],
     ]
+
+  it 'uses the manager to manage tasks', ->
+    assert.strictEqual @client.process_command('add walk the lawn'),
+      "Task add succeeded: task #1"
+    assert.strictEqual @client.process_command('list'),
+      "1) 'walk the lawn'"
+    assert.strictEqual @client.process_command('add mow the dog'),
+      "Task add succeeded: task #2"
+    assert.strictEqual @client.process_command('list'),
+      "1) 'walk the lawn'\n" +
+        "2) 'mow the dog'"
+    assert.strictEqual @client.process_command('complete 2 barber'),
+      "Task complete succeeded: task #2"
+    assert.strictEqual @client.process_command('list'),
+      "1) 'walk the lawn'\n" +
+        "2) COMPLETE 'mow the dog' (barber)"
+    assert.strictEqual @client.process_command('remove 1'),
+      "Task remove succeeded: task #1"
+    assert.strictEqual @client.process_command('list'),
+      "2) COMPLETE 'mow the dog' (barber)"
+    assert.strictEqual @client.process_command('remove 2'),
+      "Task remove succeeded: task #2"
+    assert.strictEqual @client.process_command('list'),
+      ""
 
 assertTaskAction = (client, test) ->
   [command, expectMethod, expectArgs...] = test

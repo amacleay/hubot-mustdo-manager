@@ -33,13 +33,22 @@ class MustDoManager
     return taskToComplete.ordinal
 
   remove_task: (ordinal, maybeDate) ->
-    for i in [0..@task_list(maybeDate).length]
-      task = @task_list(maybeDate)[i]
-      if task.ordinal is ordinal
-        @task_list(maybeDate).splice i, 1
-        return task.ordinal
+    tasksToRemove = @task_list(maybeDate).filter (t) ->
+      t.ordinal is ordinal
 
-    return 0
+    assert.ok tasksToRemove.length <= 1,
+      'INTERNAL ERROR: too many tasks with ordinal'
+
+    return 0 unless tasksToRemove.length is 1
+
+    taskToRemove = tasksToRemove[0]
+
+    for i in [0..@task_list(maybeDate).length - 1]
+      task = @task_list(maybeDate)[i]
+      if task is taskToRemove
+        @task_list(maybeDate).splice i, 1
+
+    return taskToRemove.ordinal
 
   date: ->
     if @last_date_check_epoch_seconds + 10 < @epoch_seconds()
