@@ -10,7 +10,14 @@ _ = require 'underscore'
 describe 'mustdo-hubot-client', ->
   beforeEach ->
     MustDoHubotClient = require '../src/mustdo-hubot-client'
-    @client = new MustDoHubotClient
+    @robot =
+      logger:
+        debug: sinon.spy()
+        info: sinon.spy()
+      brain:
+        get: sinon.spy()
+        set: sinon.spy()
+    @client = new MustDoHubotClient @robot
 
   it 'has a mustdomanager', ->
     assert.ok @client.mustdomanager,
@@ -19,12 +26,19 @@ describe 'mustdo-hubot-client', ->
       'MustDoManager',
       'Class is MustDoManager'
 
+  it 'has a robot', ->
+    assert.ok @client.robot,
+      'robot exists'
+    assert.strictEqual @client.robot,
+      @robot,
+      'Robot is what we passed in'
+
   it 'has an action, usage, and interpretation for each action', ->
     assert.deepEqual @client.available_actions(),
       @client.available_usages()
 
   it 'processes well formed adds into the correct arguments', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['add hang the laundry',
         'add_task',
         { description: 'hang the laundry' }
@@ -50,7 +64,7 @@ describe 'mustdo-hubot-client', ->
       ],
     ]
   it 'responds to broken adds with usage', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['add',
         'help',
         "Task add description missing or malformed\n" +
@@ -80,7 +94,7 @@ describe 'mustdo-hubot-client', ->
       'tomorrow give me a sandwich',
       'sudo tomorrow give me a sandwich',
     ].forEach (command) =>
-      assertTaskAction @client, [command,
+      assertTaskAction @client, @robot, [command,
         'help',
         "MustDoManager\n" +
           "Usage: <maybe date> <command> <optional args>\n" +
@@ -88,7 +102,7 @@ describe 'mustdo-hubot-client', ->
       ]
 
   it 'processes well formed lists into the correct arguments', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['list',
         'task_list'
       ],
@@ -105,7 +119,7 @@ describe 'mustdo-hubot-client', ->
       ]
     ]
   it 'responds to broken lists with usage', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['list your tasks bro',
         'help',
         "Extra parameters\n" +
@@ -119,7 +133,7 @@ describe 'mustdo-hubot-client', ->
     ]
 
   it 'processes well formed completions into the correct arguments', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['complete 1',
         'complete_task',
         1,
@@ -138,7 +152,7 @@ describe 'mustdo-hubot-client', ->
       ]
     ]
   it 'responds to broken completions with usage', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['complete me',
         'help',
         "Ordinal not found where expected\n" +
@@ -157,7 +171,7 @@ describe 'mustdo-hubot-client', ->
     ]
 
   it 'processes well formed removals into the correct arguments', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['today remove 3',
         'remove_task',
         3,
@@ -169,7 +183,7 @@ describe 'mustdo-hubot-client', ->
       ],
     ]
   it 'responds to broken removals with usage', ->
-    assertTaskAction @client, test for test in [
+    assertTaskAction @client, @robot, test for test in [
       ['remove',
         'help',
         "Ordinal not found where expected\n" +
@@ -216,7 +230,7 @@ describe 'mustdo-hubot-client', ->
     assert.strictEqual @client.process_command('list'),
       ""
 
-assertTaskAction = (client, test) ->
+assertTaskAction = (client, robot, test) ->
   [command, expectMethod, expectArgs...] = test
   [managerMethod, managerArgs...] =
     client.task_manager_action(command)
@@ -229,6 +243,9 @@ assertTaskAction = (client, test) ->
     "Manager args  '#{ managerArgs.join ',' }'
       matched expected '#{ expectArgs.join ',' }'
       for command '#{command}'"
+    # TODO: should always call hubot.brain.set
+    # with the correct date unless help is called
+    # expect(robot.brain.set).to.have.been.called
 
 relativeDate = (offsetDays) ->
   now = new Date

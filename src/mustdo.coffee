@@ -15,8 +15,8 @@
 #   A.MacLeay <a.macleay@gmail.com>
 
 MustDoHubotClient = require './mustdo-hubot-client'
-mustdoclient = new MustDoHubotClient
 
 module.exports = (robot) ->
+  mustdoclient = new MustDoHubotClient robot
   robot.respond /mustdo\b(.*)/, (res) ->
     res.reply mustdoclient.process_command res.match[1]
